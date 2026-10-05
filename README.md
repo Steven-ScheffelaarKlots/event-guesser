@@ -7,25 +7,60 @@ is coloured by how far it is from its correct position:
 - **Yellow**: one spot off
 - **Red**: two or more spots off
 
-## Running
+Events live in Postgres and are served by a small API. An admin dashboard
+manages them.
+
+## Running locally
+
+Needs Node 22+ and Docker.
 
 ```sh
 npm install
-npm run dev     # http://localhost:5173
-npm test        # game-logic unit tests
-npm run build   # type-check + production build
+npm run db:up        # Postgres 17 in Docker on localhost:5434
+npm run db:migrate   # create or upgrade tables
+npm run db:seed      # load the starter events (safe to re-run; never overwrites edits)
+npm run dev          # API :3000, game http://localhost:5173, admin http://localhost:5174
 ```
+
+> **The admin has no login.** Anyone who can reach the admin app or the API's
+> `/api/admin` routes can change events. Keep this on your own machine until
+> authentication is added.
+
+| Script | What it does |
+| --- | --- |
+| `npm test` | Unit and route tests for every workspace. No database needed. |
+| `npm run test:db` | Repository tests against the `chronodle_test` database (needs `db:up`) |
+| `npm run build` | Type-checks and builds every workspace |
+| `npm run db:down` | Stops Postgres. Data is kept in a Docker volume. |
+
+The API reads `DATABASE_URL`, `TEST_DATABASE_URL` and `PORT` from the
+environment or from a root `.env`. See `.env.example` for the defaults.
 
 ## Layout
 
 | Path | Responsibility |
 | --- | --- |
-| `src/data/events.ts` | The event bank: name, description, date, Wikipedia link and optional genre per event. Append entries to add events. |
-| `src/game/dates.ts` | Parsing, comparing and formatting `YYYY-MM-DD` dates (BC as `-YYYY`). |
-| `src/game/generate.ts` | Picks and shuffles events into a `Puzzle`. Takes an injectable `random` so a seeded/daily source can plug in. `puzzleFromEvents` builds a puzzle from a fixed set. |
-| `src/game/evaluate.ts` | Scores a guess (distance → correct/near/far). |
-| `src/game/state.ts` | Pure reducer for the guess row, submissions, history and win state. |
-| `src/hooks/useGame.ts` | Wires the reducer to React and decides where new puzzles come from. |
-| `src/components/` | UI: available events, guess row (drag & drop via `@dnd-kit`), history, win dialog. `dnd.ts` holds drag ids and collision rules. |
+| `packages/shared` | Event types and `GENRES`, date parsing and formatting (BC as `-YYYY`), and the zod `eventInputSchema`/`eventPatchSchema` used by both the API and the admin form. |
+| `apps/api` | Hono API. `app.ts` holds the routes; `repository.ts` handles Postgres access through Drizzle; `db/` contains the schema, migrations and seed data. |
+| `apps/game` | The game. `src/game/` is pure game logic; `src/hooks/useEventBank.ts` loads events from `GET /api/events`. |
+| `apps/admin` | Admin dashboard. `src/logic/` holds pure helpers (slugs, filtering, sorting, form validation); `src/components/` holds the table and dialogs. |
 
-The game logic in `src/game/` has no React or DOM dependencies.
+### API
+
+| Method and path | Purpose |
+| --- | --- |
+| `GET /api/events` | Enabled events, for the game |
+| `GET /api/admin/events` | All events with `enabled` and timestamps |
+| `POST /api/admin/events` | Create an event |
+| `PATCH /api/admin/events/:id` | Update any fields except `id` |
+| `DELETE /api/admin/events/:id` | Delete an event |
+| `GET /api/health` | Checks the database connection |
+
+Every error comes back as `{ "error": { "code", "message", "fields"? } }`.
+
+### Changing the database schema
+
+Edit `apps/api/src/db/schema.ts`, then run
+`npm run db:generate -w @chronodle/api -- --name <change>` and
+`npm run db:migrate`. Adding a genre to `GENRES` also changes the database's
+CHECK constraint, so it needs a migration too.

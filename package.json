@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev -w @chronodle/game",
+    "dev": "concurrently -n api,game,admin -c blue,green,magenta \"npm run dev -w @chronodle/api\" \"npm run dev -w @chronodle/game\" \"npm run dev -w @chronodle/admin\"",
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "test:db": "npm run test:db -w @chronodle/api",
@@ -20,6 +20,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
+    "concurrently": "^10.0.5",
     "typescript": "^7.0.2",
     "vite": "^8.3.2",
     "vitest": "^5.0.3"
