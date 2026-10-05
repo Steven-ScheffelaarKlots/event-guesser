@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: chronodle
+      POSTGRES_PASSWORD: chronodle
+      POSTGRES_DB: chronodle
+    ports:
+      # 5434 on the host because 5432 and 5433 are taken by other Postgres instances on the dev machine.
+      - "5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/create-test-db.sql:/docker-entrypoint-initdb.d/create-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chronodle -d chronodle"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+volumes:
+  pgdata:
