@@ -20,4 +20,16 @@ describe("dates", () => {
     expect(() => parseEventDate("1969-13-01")).toThrow();
     expect(() => parseEventDate("0000-01-01")).toThrow();
   });
+  it("rejects days that don't exist in the month", () => {
+    expect(() => parseEventDate("1999-02-30")).toThrow();
+    expect(() => parseEventDate("1999-04-31")).toThrow();
+    expect(() => parseEventDate("1900-02-29")).toThrow();
+    expect(() => parseEventDate("-0002-02-29")).toThrow();
+  });
+
+  it("accepts leap days, using astronomical years for BC (1 BC is a leap year)", () => {
+    expect(parseEventDate("2000-02-29")).toEqual({ year: 2000, month: 2, day: 29 });
+    expect(parseEventDate("2024-02-29").day).toBe(29);
+    expect(parseEventDate("-0001-02-29")).toEqual({ year: -1, month: 2, day: 29 });
+  });
 });

@@ -1,10 +1,10 @@
-import { compareEventDates } from "./dates";
+import { compareEventDates, PUZZLE_SIZE } from "@chronodle/shared";
 import type { HistoricalEvent, Puzzle } from "./types";
 
 /** Returns a float in [0, 1). Swap in a seeded generator for daily puzzles. */
 export type RandomSource = () => number;
 
-export const DEFAULT_PUZZLE_SIZE = 5;
+export const DEFAULT_PUZZLE_SIZE = PUZZLE_SIZE;
 
 export interface PuzzleOptions {
   size?: number;

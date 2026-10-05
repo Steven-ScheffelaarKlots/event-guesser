@@ -1,5 +1,5 @@
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { formatEventDate } from "../game/dates";
+import { formatEventDate } from "@chronodle/shared";
 import type { HistoricalEvent, Slot } from "../game/types";
 import { POOL_DROP_ID, poolDragId } from "./dnd";
 

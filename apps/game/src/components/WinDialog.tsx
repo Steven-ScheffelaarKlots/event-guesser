@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { formatEventDate } from "../game/dates";
+import { formatEventDate } from "@chronodle/shared";
 import type { GameState } from "../game/types";
 import { FEEDBACK_META } from "./feedback";
 

@@ -1,34 +1,5 @@
-/** Broad categories for events. Listed in `GENRES` so they can be iterated. */
-export const GENRES = [
-  "politics",
-  "war",
-  "science",
-  "technology",
-  "exploration",
-  "religion",
-  "culture",
-  "economy",
-  "disaster",
-] as const;
-
-export type Genre = (typeof GENRES)[number];
-
-/**
- * A single historical event from the event bank.
- *
- * `date` is an ISO-like "YYYY-MM-DD" string. Years before the common era use a
- * leading minus sign and mean "N BC" directly (no year zero), e.g. "-0044-03-15"
- * is 15 March 44 BC.
- */
-export interface HistoricalEvent {
-  id: string;
-  name: string;
-  description: string;
-  date: string;
-  /** Full URL of the English Wikipedia article about the event. */
-  wikipedia: string;
-  genre?: Genre;
-}
+export { GENRES, type Genre, type HistoricalEvent } from "@chronodle/shared";
+import type { HistoricalEvent } from "@chronodle/shared";
 
 /** One round of the game: the events to order and the correct answer. */
 export interface Puzzle {

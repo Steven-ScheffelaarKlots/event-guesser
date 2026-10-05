@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EVENTS } from "../data/events";
-import { compareEventDates } from "./dates";
+import { compareEventDates } from "@chronodle/shared";
 import { GENRES } from "./types";
 import { createRandomPuzzle, puzzleFromEvents } from "./generate";
 

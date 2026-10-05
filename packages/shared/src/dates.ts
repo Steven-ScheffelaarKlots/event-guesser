@@ -22,6 +22,16 @@ const MONTHS = [
   "December",
 ];
 
+const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+function daysInMonth(year: number, month: number): number {
+  if (month !== 2) return DAYS_IN_MONTH[month - 1];
+  // Proleptic Gregorian leap rule on astronomical years, where 1 BC is year 0.
+  const y = year < 0 ? year + 1 : year;
+  const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  return leap ? 29 : 28;
+}
+
 export function parseEventDate(date: string): DateParts {
   const match = DATE_PATTERN.exec(date);
   if (!match) {
@@ -33,7 +43,13 @@ export function parseEventDate(date: string): DateParts {
     month: Number(month),
     day: Number(day),
   };
-  if (parts.year === 0 || parts.month < 1 || parts.month > 12 || parts.day < 1 || parts.day > 31) {
+  if (
+    parts.year === 0 ||
+    parts.month < 1 ||
+    parts.month > 12 ||
+    parts.day < 1 ||
+    parts.day > daysInMonth(parts.year, parts.month)
+  ) {
     throw new Error(`Invalid event date "${date}"`);
   }
   return parts;
