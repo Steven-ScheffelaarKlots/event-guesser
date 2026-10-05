@@ -186,6 +186,23 @@ button {
   opacity: 0.45;
 }
 
+/* ---------- Loading / error status ---------- */
+
+.status {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 64px 16px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.status__title {
+  color: var(--text);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
 /* ---------- Available events ---------- */
 
 .panel--pool {
