@@ -13,6 +13,16 @@ type Parsed<T> = { ok: true; data: T } | { ok: false; response: Response };
 
 /** Validates a JSON body, turning every failure (including bad JSON) into our 400 shape. */
 async function parseBody<T>(c: Context, schema: z.ZodType<T>): Promise<Parsed<T>> {
+  // Requiring JSON forces a CORS preflight on cross-site requests, which this API never approves.
+  if (!c.req.header("Content-Type")?.includes("application/json")) {
+    return {
+      ok: false,
+      response: c.json(
+        errorBody("validation_failed", "Send the request body as JSON (Content-Type: application/json)"),
+        415,
+      ),
+    };
+  }
   let body: unknown;
   try {
     body = await c.req.json();

@@ -10,3 +10,5 @@ export const DATABASE_URL =
 export const TEST_DATABASE_URL =
   process.env.TEST_DATABASE_URL ?? "postgres://chronodle:chronodle@localhost:5434/chronodle_test";
 export const PORT = Number(process.env.PORT ?? 3000);
+// Localhost only by default: the admin routes have no authentication.
+export const HOST = process.env.HOST ?? "127.0.0.1";

@@ -33,7 +33,8 @@ npm run dev          # API :3000, game http://localhost:5173, admin http://local
 | `npm run build` | Type-checks and builds every workspace |
 | `npm run db:down` | Stops Postgres. Data is kept in a Docker volume. |
 
-The API reads `DATABASE_URL`, `TEST_DATABASE_URL` and `PORT` from the
+The API reads `DATABASE_URL`, `TEST_DATABASE_URL`, `PORT` and `HOST` (default
+`127.0.0.1`, localhost only) from the
 environment or from a root `.env`. See `.env.example` for the defaults.
 
 ## Layout

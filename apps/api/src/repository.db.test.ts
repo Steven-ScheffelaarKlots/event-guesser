@@ -128,4 +128,15 @@ describe("pg event repository", () => {
     const edited = (await repo.listAll()).find((e) => e.id === "battle-of-hastings");
     expect(edited?.name).toBe("Edited");
   });
+
+  it("reseeds without failing when an admin-made event holds a seed event's date", async () => {
+    await seedEvents(db);
+    await repo.remove("moon-landing");
+    await repo.create({ ...moon, id: "apollo-11" });
+
+    expect(await seedEvents(db)).toEqual({ inserted: 0, skipped: SEED_EVENTS.length });
+    const ids = (await repo.listAll()).map((e) => e.id);
+    expect(ids).toContain("apollo-11");
+    expect(ids).not.toContain("moon-landing");
+  });
 });

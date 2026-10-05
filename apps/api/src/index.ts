@@ -1,6 +1,6 @@
 import { serve } from "@hono/node-server";
 import { createApp } from "./app";
-import { DATABASE_URL, PORT } from "./config";
+import { DATABASE_URL, HOST, PORT } from "./config";
 import { createDb } from "./db/client";
 import { createPgEventRepository } from "./repository";
 
@@ -11,6 +11,6 @@ const app = createApp(createPgEventRepository(db), {
   },
 });
 
-serve({ fetch: app.fetch, port: PORT }, (info) => {
+serve({ fetch: app.fetch, port: PORT, hostname: HOST }, (info) => {
   console.log(`API listening on http://localhost:${info.port}`);
 });

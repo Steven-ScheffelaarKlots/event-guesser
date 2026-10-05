@@ -107,6 +107,18 @@ describe("POST /api/admin/events", () => {
     });
   });
 
+  it("rejects a body that isn't sent as JSON, so cross-site form posts can't create events", async () => {
+    const res = await setup().app.request("/api/admin/events", {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(newEvent),
+    });
+    expect(res.status).toBe(415);
+    expect(await res.json()).toEqual({
+      error: { code: "validation_failed", message: "Send the request body as JSON (Content-Type: application/json)" },
+    });
+  });
+
   it("returns 409 naming the event that already has the date", async () => {
     const res = await setup().app.request("/api/admin/events", send("POST", { ...newEvent, date: hastings.date }));
     expect(res.status).toBe(409);
