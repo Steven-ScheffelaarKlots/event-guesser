@@ -4,7 +4,7 @@ import { TEST_DATABASE_URL } from "./config";
 import { createDb } from "./db/client";
 import { runMigrations } from "./db/migrations";
 import { events } from "./db/schema";
-import { seedEvents } from "./db/seed";
+import { seedEvents, seedIfEmpty } from "./db/seed";
 import { SEED_EVENTS } from "./db/seed-events";
 import { ConflictError, createPgEventRepository } from "./repository";
 
@@ -138,5 +138,13 @@ describe("pg event repository", () => {
     const ids = (await repo.listAll()).map((e) => e.id);
     expect(ids).toContain("apollo-11");
     expect(ids).not.toContain("moon-landing");
+  });
+
+  it("seeds an empty database on startup, but never brings back events deleted later", async () => {
+    expect(await seedIfEmpty(db)).toBe(SEED_EVENTS.length);
+    await repo.remove("moon-landing");
+
+    expect(await seedIfEmpty(db)).toBe(0);
+    expect((await repo.listAll()).map((e) => e.id)).not.toContain("moon-landing");
   });
 });

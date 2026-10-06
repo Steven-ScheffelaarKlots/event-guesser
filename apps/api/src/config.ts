@@ -12,3 +12,9 @@ export const TEST_DATABASE_URL =
 export const PORT = Number(process.env.PORT ?? 3000);
 // Localhost only by default: the admin routes have no authentication.
 export const HOST = process.env.HOST ?? "127.0.0.1";
+
+// Production server only (src/server.ts): the admin gets its own port, never exposed publicly.
+export const ADMIN_PORT = Number(process.env.ADMIN_PORT ?? 3001);
+// Built frontends (`npm run build`).
+export const GAME_DIR = process.env.GAME_DIR ?? fileURLToPath(new URL("../../game/dist", import.meta.url));
+export const ADMIN_DIR = process.env.ADMIN_DIR ?? fileURLToPath(new URL("../../admin/dist", import.meta.url));

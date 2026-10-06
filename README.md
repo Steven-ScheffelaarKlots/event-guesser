@@ -37,6 +37,37 @@ The API reads `DATABASE_URL`, `TEST_DATABASE_URL`, `PORT` and `HOST` (default
 `127.0.0.1`, localhost only) from the
 environment or from a root `.env`. See `.env.example` for the defaults.
 
+## Deploying with Docker (Unraid)
+
+Every push to `main` runs the tests and publishes
+`ghcr.io/steven-scheffelaarklots/chronodle:latest` (see
+`.github/workflows/docker.yml`). The image runs one process with two ports:
+
+| Container port | Serves | Expose |
+| --- | --- | --- |
+| `3000` | The game and `GET /api/events` | Fine behind a reverse proxy |
+| `3001` | The admin dashboard and `/api/admin` | **LAN only.** It has no login. |
+
+On startup it applies migrations, and seeds the starter events only if the
+table is empty. Events you delete later stay deleted.
+
+To run it on Unraid with the Compose Manager plugin:
+
+1. Make the GHCR package public (GitHub → Packages → chronodle → Package
+   settings), or run `docker login ghcr.io` on the server with a token that has
+   `read:packages`.
+2. Create a new stack. Paste `deploy/docker-compose.yml` into it, and put the
+   values from `deploy/.env.example` into the stack's env file with a real
+   `POSTGRES_PASSWORD`.
+3. Compose Up. The game is at `http://<unraid-ip>:8080` and the admin at
+   `http://<unraid-ip>:8081`. Postgres data lives in
+   `/mnt/user/appdata/chronodle/postgres`.
+
+To update, pull and restart the stack (Compose Manager: "Update Stack"). When
+you put the game behind a reverse proxy, proxy only port 8080.
+
+To try the image locally, run `docker build -t chronodle .`.
+
 ## Layout
 
 | Path | Responsibility |

@@ -1,4 +1,5 @@
 import { eventInputSchema, eventPatchSchema, issuesToFields } from "@chronodle/shared";
+import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono, type Context } from "hono";
 import type { z } from "zod";
 import { ConflictError, type EventRepository } from "./repository";
@@ -42,9 +43,19 @@ async function parseBody<T>(c: Context, schema: z.ZodType<T>): Promise<Parsed<T>
 export interface AppOptions {
   /** Throws if a dependency (the database) is unavailable. */
   checkHealth?: () => Promise<void>;
+  /**
+   * Which routes to mount. In production the game ("public") and the admin ("admin") run on
+   * separate ports so the unauthenticated admin routes never sit behind the public reverse proxy.
+   */
+  routes?: "all" | "public" | "admin";
+  /** Directory of a built frontend (Vite `dist`) to serve for paths no route handles. */
+  staticRoot?: string;
 }
 
-export function createApp(repo: EventRepository, { checkHealth = async () => {} }: AppOptions = {}) {
+export function createApp(
+  repo: EventRepository,
+  { checkHealth = async () => {}, routes = "all", staticRoot }: AppOptions = {},
+) {
   const app = new Hono();
   const notFound = (c: Context, id: string) => c.json(errorBody("not_found", `No event with id "${id}"`), 404);
 
@@ -53,8 +64,32 @@ export function createApp(repo: EventRepository, { checkHealth = async () => {} 
     return c.json({ ok: true });
   });
 
-  app.get("/api/events", async (c) => c.json(await repo.listEnabled()));
+  if (routes !== "admin") app.get("/api/events", async (c) => c.json(await repo.listEnabled()));
+  if (routes !== "public") mountAdminRoutes(app, repo, notFound);
 
+  if (staticRoot) app.use("*", serveStatic({ root: staticRoot }));
+
+  app.notFound((c) => c.json(errorBody("not_found", "Not found"), 404));
+
+  app.onError((error, c) => {
+    if (error instanceof ConflictError) {
+      return c.json(
+        errorBody("conflict", error.message, { [error.field]: `Already used by "${error.existingId}"` }),
+        409,
+      );
+    }
+    console.error(error);
+    return c.json(errorBody("internal", "Something went wrong"), 500);
+  });
+
+  return app;
+}
+
+function mountAdminRoutes(
+  app: Hono,
+  repo: EventRepository,
+  notFound: (c: Context, id: string) => Response,
+) {
   app.get("/api/admin/events", async (c) => c.json(await repo.listAll()));
 
   app.post("/api/admin/events", async (c) => {
@@ -75,19 +110,4 @@ export function createApp(repo: EventRepository, { checkHealth = async () => {} 
     const id = c.req.param("id");
     return (await repo.remove(id)) ? c.body(null, 204) : notFound(c, id);
   });
-
-  app.notFound((c) => c.json(errorBody("not_found", "Not found"), 404));
-
-  app.onError((error, c) => {
-    if (error instanceof ConflictError) {
-      return c.json(
-        errorBody("conflict", error.message, { [error.field]: `Already used by "${error.existingId}"` }),
-        409,
-      );
-    }
-    console.error(error);
-    return c.json(errorBody("internal", "Something went wrong"), 500);
-  });
-
-  return app;
 }

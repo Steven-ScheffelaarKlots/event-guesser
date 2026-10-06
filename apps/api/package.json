@@ -10,7 +10,8 @@
     "test:db": "vitest run --config vitest.db.config.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/scripts/migrate.ts",
-    "db:seed": "tsx src/scripts/seed.ts"
+    "db:seed": "tsx src/scripts/seed.ts",
+    "start": "node --import tsx src/server.ts"
   },
   "dependencies": {
     "@chronodle/shared": "*",
@@ -18,12 +19,12 @@
     "drizzle-orm": "^0.45.3",
     "hono": "^4.13.12",
     "pg": "^8.23.1",
+    "tsx": "^4.23.15",
     "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "@types/pg": "^8.23.1",
-    "drizzle-kit": "^0.31.11",
-    "tsx": "^4.23.15"
+    "drizzle-kit": "^0.31.11"
   }
 }

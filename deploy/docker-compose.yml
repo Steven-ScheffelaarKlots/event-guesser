@@ -1,0 +1,34 @@
+# Chronodle on Unraid (Compose Manager plugin) or any Docker host.
+# Copy .env.example to .env next to this file and set POSTGRES_PASSWORD first.
+#
+#   GAME_PORT  (default 8080): the game. Safe to put behind your reverse proxy.
+#   ADMIN_PORT (default 8081): the admin dashboard. It has NO login, so keep it
+#              LAN-only and never route it through the reverse proxy.
+
+services:
+  app:
+    image: ghcr.io/steven-scheffelaarklots/chronodle:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://chronodle:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/chronodle
+    ports:
+      - "${GAME_PORT:-8080}:3000"
+      - "${ADMIN_PORT:-8081}:3001"
+
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: chronodle
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: chronodle
+    volumes:
+      - ${APPDATA:-/mnt/user/appdata/chronodle}/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chronodle -d chronodle"]
+      interval: 5s
+      timeout: 5s
+      retries: 20

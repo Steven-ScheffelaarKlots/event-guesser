@@ -1,4 +1,7 @@
 import type { AdminEvent } from "@chronodle/shared";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { createApp } from "./app";
 import { createFakeEventRepository } from "./test/fake-repository";
@@ -227,5 +230,38 @@ describe("errors and health", () => {
     });
     expect((await failing.request("/api/health")).status).toBe(500);
     spy.mockRestore();
+  });
+});
+
+describe("serving the game and admin separately", () => {
+  it("leaves the admin routes off the public app", async () => {
+    const app = createApp(createFakeEventRepository([hastings]), { routes: "public" });
+    expect((await app.request("/api/events")).status).toBe(200);
+    expect((await app.request("/api/admin/events")).status).toBe(404);
+    expect((await app.request("/api/admin/events", send("POST", newEvent))).status).toBe(404);
+    expect((await app.request("/api/admin/events/battle-of-hastings", { method: "DELETE" })).status).toBe(404);
+  });
+
+  it("leaves the game routes off the admin app", async () => {
+    const app = createApp(createFakeEventRepository([hastings]), { routes: "admin" });
+    expect((await app.request("/api/admin/events")).status).toBe(200);
+    expect((await app.request("/api/events")).status).toBe(404);
+  });
+
+  it("serves a built frontend from staticRoot, keeping JSON 404s for unknown API paths", async () => {
+    const root = mkdtempSync(join(tmpdir(), "chronodle-static-"));
+    writeFileSync(join(root, "index.html"), "<h1>Chronodle</h1>");
+    try {
+      const app = createApp(createFakeEventRepository([hastings]), { routes: "public", staticRoot: root });
+      const page = await app.request("/");
+      expect(page.status).toBe(200);
+      expect(await page.text()).toBe("<h1>Chronodle</h1>");
+      expect((await app.request("/api/events")).status).toBe(200);
+      const missing = await app.request("/api/nope");
+      expect(missing.status).toBe(404);
+      expect(await missing.json()).toEqual({ error: { code: "not_found", message: "Not found" } });
+    } finally {
+      rmSync(root, { recursive: true });
+    }
   });
 });
